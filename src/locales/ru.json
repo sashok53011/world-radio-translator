@@ -1,0 +1,138 @@
+{
+  "app": {
+    "title": "World Radio Translator",
+    "darkMode": "Тёмная тема",
+    "lightMode": "Светлая тема",
+    "aiSettings": "Настройки AI"
+  },
+  "provider": {
+    "gemini": "Gemini: перевод радио",
+    "openai": "OpenAI-совместимый переводчик",
+    "geminiBadge": "Stream API",
+    "openaiBadge": "STT + LLM + TTS",
+    "geminiDesc": "Переводит прямой эфир радио через Gemini Live.",
+    "openaiDesc": "Обрабатывает поток короткими сегментами STT, перевода и TTS."
+  },
+  "language": {
+    "label": "Язык",
+    "select": "Выберите язык перевода"
+  },
+  "translation": {
+    "start": "Запустить перевод",
+    "stop": "Остановить",
+    "connecting": "Подключение...",
+    "setup": "Настройка соединения...",
+    "active": "Сессия перевода на {{lang}} готова.",
+    "error": "Ошибка WebSocket. Проверьте соединение."
+  },
+  "controls": {
+    "voice": "Голос",
+    "emotion": "Тон",
+    "speed": "Скорость"
+  },
+  "voices": {
+    "echo": "Echo (тёплый)",
+    "puck": "Puck (бодрый)",
+    "charon": "Charon (глубокий)",
+    "kore": "Kore (мягкий)",
+    "fenrir": "Fenrir (громкий)"
+  },
+  "tones": {
+    "warm": "Тёплый",
+    "calm": "Спокойный",
+    "energetic": "Энергичный",
+    "deep": "Кинематографичный"
+  },
+  "transcript": {
+    "title": "Лента транскрипта",
+    "subtitle": "Журнал захваченного и переведённого аудио",
+    "copy": "Копировать",
+    "copied": "Скопировано!",
+    "download": "Скачать",
+    "clear": "Очистить",
+    "originalHeader": "ОРИГИНАЛ",
+    "translatedHeader": "ПЕРЕВОД",
+    "nativeStream": "ОРИГИНАЛ",
+    "interpreted": "Перевод ({{lang}})",
+    "listening": "Ожидание речи...",
+    "translating": "Перевод на {{lang}}...",
+    "detector": "ДЕТЕКТОР",
+    "decoding": "ДЕКОД...",
+    "intelligence": "ИНТЕЛЛЕКТ",
+    "translatingStatus": "ПЕРЕВОД...",
+    "waiting": "Ожидание эфира...",
+    "waitingDesc": "Транскрипты и переводы появятся здесь.",
+    "exportOrig": "Ориг WAV",
+    "exportTrans": "Перевод WAV"
+  },
+  "sources": {
+    "radio": "Мировое радио",
+    "youtube": "YouTube",
+    "media": "Файлы и камера",
+    "filterRadio": "Фильтр станций...",
+    "filterYoutube": "Фильтр YouTube...",
+    "searchYoutube": "Поиск YouTube...",
+    "searchBtn": "Поиск",
+    "pasteUrl": "Вставьте URL YouTube",
+    "loadTranslate": "Загрузить",
+    "uploadFile": "Загрузить файл",
+    "captureCamera": "Камера/микрофон",
+    "noMedia": "Нет источников",
+    "noMediaDesc": "Загрузите файл или включите камеру.",
+    "regional": "Радио: {{country}}",
+    "featured": "Популярные станции",
+    "youtubeSources": "YouTube-источники",
+    "scanning": "Поиск частот...",
+    "noRadio": "Станции не найдены",
+    "noRadioDesc": "Измените фильтры или регион.",
+    "noYoutube": "YouTube не найден",
+    "noYoutubeDesc": "Измените запрос или вставьте URL.",
+    "activeStations": "{{count}} станций",
+    "youtubeCount": "{{count}} источников"
+  },
+  "player": {
+    "noStation": "Станция не выбрана",
+    "noStationDesc": "Выберите источник выше",
+    "volume": "Громкость: {{pct}}%",
+    "speed": "Скорость:"
+  },
+  "settings": {
+    "title": "Настройки AI",
+    "desc": "Настройка моделей и аудио.",
+    "provider": "Провайдер",
+    "gemini": "Google Gemini",
+    "openai": "OpenAI-совместимые",
+    "backendUrl": "URL сервера (мобильный)",
+    "backendHint": "Для Android. Пусто = тот же origin.",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "llmTitle": "LLM — перевод и профили",
+    "llmDesc": "OpenAI Chat Completions.",
+    "sttTitle": "STT — распознавание",
+    "sttDesc": "OpenAI audio transcriptions (WAV).",
+    "ttsTitle": "TTS — озвучка",
+    "ttsDesc": "OpenAI audio speech (WAV).",
+    "endpoint": "URL эндпоинта",
+    "modelsUrl": "URL списка моделей (необяз.)",
+    "modelsHint": "Пусто = стандартный /models",
+    "model": "Модель",
+    "apiKey": "API-ключ",
+    "apiKeyHint": "Необяз. для локальных",
+    "fetchModels": "Получить модели",
+    "modelsFound": "Найдено: {{count}}",
+    "voice": "Голос",
+    "voiceHint": "ID голоса (alloy)",
+    "test": "Тест",
+    "testEndpoint": "Тест эндпоинта",
+    "testPrompt": "Промпт для теста",
+    "testText": "Текст для синтеза",
+    "ok": "OK",
+    "audioPlayed": "(аудио воспроизведено)",
+    "selectFile": "Сначала выберите файл.",
+    "warning": "Ключи хранятся в браузере и отправляются на сервер. Используйте только доверенные эндпоинты.",
+    "language": "Язык"
+  },
+  "map": {
+    "radius": "Радиус"
+  }
+}

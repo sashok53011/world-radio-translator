@@ -1,0 +1,138 @@
+{
+  "app": {
+    "title": "World Radio Translator",
+    "darkMode": "Dunkel",
+    "lightMode": "Hell",
+    "aiSettings": "KI-Einstellungen"
+  },
+  "provider": {
+    "gemini": "Gemini Radio-Übersetzer",
+    "openai": "OpenAI-kompatibel",
+    "geminiBadge": "Stream",
+    "openaiBadge": "STT+LLM+TTS",
+    "geminiDesc": "Übersetzt Live-Radio mit Gemini.",
+    "openaiDesc": "Verarbeitet Stream in STT/Übersetzung/TTS."
+  },
+  "language": {
+    "label": "Sprache",
+    "select": "Zielsprache wählen"
+  },
+  "translation": {
+    "start": "Übersetzung starten",
+    "stop": "Stoppen",
+    "connecting": "Verbinden...",
+    "setup": "Verbindung wird eingerichtet...",
+    "active": "Sitzung auf {{lang}} bereit.",
+    "error": "WebSocket-Fehler. Verbindung prüfen."
+  },
+  "controls": {
+    "voice": "Stimme",
+    "emotion": "Ton",
+    "speed": "Tempo"
+  },
+  "voices": {
+    "echo": "Echo (warm)",
+    "puck": "Puck (fröhlich)",
+    "charon": "Charon (tief)",
+    "kore": "Kore (sanft)",
+    "fenrir": "Fenrir (kräftig)"
+  },
+  "tones": {
+    "warm": "Warm",
+    "calm": "Ruhig",
+    "energetic": "Energisch",
+    "deep": "Kino"
+  },
+  "transcript": {
+    "title": "Live-Transkript",
+    "subtitle": "Aufgenommenes und übersetztes Audio",
+    "copy": "Kopieren",
+    "copied": "Kopiert!",
+    "download": "Download",
+    "clear": "Löschen",
+    "originalHeader": "ORIGINAL",
+    "translatedHeader": "ÜBERSETZUNG",
+    "nativeStream": "ORIGINAL",
+    "interpreted": "Übersetzt ({{lang}})",
+    "listening": "Warte auf Sprache...",
+    "translating": "Übersetze nach {{lang}}...",
+    "detector": "DETEKTOR",
+    "decoding": "DEKOD...",
+    "intelligence": "KI",
+    "translatingStatus": "ÜBERSETZE...",
+    "waiting": "Warte auf Sendung...",
+    "waitingDesc": "Transkripte erscheinen hier.",
+    "exportOrig": "Orig WAV",
+    "exportTrans": "Übers. WAV"
+  },
+  "sources": {
+    "radio": "Weltradio",
+    "youtube": "YouTube",
+    "media": "Dateien/Kamera",
+    "filterRadio": "Sender filtern...",
+    "filterYoutube": "YouTube filtern...",
+    "searchYoutube": "YouTube suchen...",
+    "searchBtn": "Suchen",
+    "pasteUrl": "YouTube-URL einfügen",
+    "loadTranslate": "Laden",
+    "uploadFile": "Datei hochladen",
+    "captureCamera": "Kamera/Mikro",
+    "noMedia": "Keine Quellen",
+    "noMediaDesc": "Datei hochladen oder Kamera nutzen.",
+    "regional": "Radio: {{country}}",
+    "featured": "Beliebte Sender",
+    "youtubeSources": "YouTube-Quellen",
+    "scanning": "Suche Frequenzen...",
+    "noRadio": "Keine Sender",
+    "noRadioDesc": "Filter ändern oder Region wählen.",
+    "noYoutube": "Kein YouTube",
+    "noYoutubeDesc": "Suchbegriff ändern oder URL einfügen.",
+    "activeStations": "{{count}} Sender",
+    "youtubeCount": "{{count}} Quellen"
+  },
+  "player": {
+    "noStation": "Kein Sender",
+    "noStationDesc": "Quelle oben wählen",
+    "volume": "Lautstärke: {{pct}}%",
+    "speed": "Tempo:"
+  },
+  "settings": {
+    "title": "KI-Einstellungen",
+    "desc": "Modelle und Audio konfigurieren.",
+    "provider": "Anbieter",
+    "gemini": "Google Gemini",
+    "openai": "OpenAI-kompatibel",
+    "backendUrl": "Server-URL (mobil)",
+    "backendHint": "Für Android. Leer = gleicher Origin.",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "llmTitle": "LLM — Übersetzung",
+    "llmDesc": "OpenAI Chat Completions.",
+    "sttTitle": "STT — Erkennung",
+    "sttDesc": "OpenAI audio transcriptions (WAV).",
+    "ttsTitle": "TTS — Sprache",
+    "ttsDesc": "OpenAI audio speech (WAV).",
+    "endpoint": "Endpunkt-URL",
+    "modelsUrl": "Modell-URL (opt.)",
+    "modelsHint": "Leer = Standard /models",
+    "model": "Modell",
+    "apiKey": "API-Schlüssel",
+    "apiKeyHint": "Opt. für lokal",
+    "fetchModels": "Modelle laden",
+    "modelsFound": "Gefunden: {{count}}",
+    "voice": "Stimme",
+    "voiceHint": "Stimmen-ID (alloy)",
+    "test": "Test",
+    "testEndpoint": "Endpunkt testen",
+    "testPrompt": "Test-Prompt",
+    "testText": "Testtext",
+    "ok": "OK",
+    "audioPlayed": "(Audio gespielt)",
+    "selectFile": "Datei wählen.",
+    "warning": "Schlüssel werden im Browser gespeichert. Nur vertrauenswürdige Endpunkte.",
+    "language": "Sprache"
+  },
+  "map": {
+    "radius": "Radius"
+  }
+}

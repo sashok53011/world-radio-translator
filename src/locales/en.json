@@ -1,0 +1,138 @@
+{
+  "app": {
+    "title": "World Radio Translator",
+    "darkMode": "Switch to Dark Mode",
+    "lightMode": "Switch to Light Mode",
+    "aiSettings": "AI provider settings"
+  },
+  "provider": {
+    "gemini": "Gemini Live Radio Stream Interpreter",
+    "openai": "OpenAI-compatible Radio Interpreter",
+    "geminiBadge": "Stream API",
+    "openaiBadge": "STT + LLM + TTS",
+    "geminiDesc": "Translates the live radio stream directly using Gemini Live.",
+    "openaiDesc": "Processes the radio stream in short STT, translation, and TTS segments using your endpoints."
+  },
+  "language": {
+    "label": "Language",
+    "select": "Select target language for real-time translation"
+  },
+  "translation": {
+    "start": "Start Live Translation",
+    "stop": "Stop Translation",
+    "connecting": "Connecting...",
+    "setup": "Setting up live translation connection...",
+    "active": "Active Broadcast Interpretation session to {{lang}} ready.",
+    "error": "WebSocket streaming error. Please check server connection."
+  },
+  "controls": {
+    "voice": "Voice",
+    "emotion": "Emotion Tone",
+    "speed": "Speed"
+  },
+  "voices": {
+    "echo": "Echo (Warm)",
+    "puck": "Puck (Upbeat)",
+    "charon": "Charon (Deep)",
+    "kore": "Kore (Soft)",
+    "fenrir": "Fenrir (Bold)"
+  },
+  "tones": {
+    "warm": "Warm & Expressive",
+    "calm": "Calm & Professional",
+    "energetic": "Energetic & Enthusiastic",
+    "deep": "Deep & Cinematic"
+  },
+  "transcript": {
+    "title": "Live Broadcast Transcription Feed",
+    "subtitle": "Continuous log of captured and translated broadcast audio",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "download": "Download",
+    "clear": "Clear",
+    "originalHeader": "CAPTURED ORIGINAL AUDIO",
+    "translatedHeader": "GEMINI SIMULTANEOUS INTERPRETATION",
+    "nativeStream": "NATIVE STREAM",
+    "interpreted": "Interpreted ({{lang}})",
+    "listening": "Listening for active speech segments...",
+    "translating": "Translating live to {{lang}}...",
+    "detector": "DETECTOR",
+    "decoding": "DECODING...",
+    "intelligence": "INTELLIGENCE",
+    "translatingStatus": "TRANSLATING...",
+    "waiting": "Listening to active broadcast frequencies...",
+    "waitingDesc": "Captured audio captions & simultaneous translations will flow into this dual-channel side-by-side display panel in real-time.",
+    "exportOrig": "Orig WAV",
+    "exportTrans": "Trans WAV"
+  },
+  "sources": {
+    "radio": "World Radio Airwaves",
+    "youtube": "YouTube Live & Streams",
+    "media": "Local & Camera",
+    "filterRadio": "Filter radio stations...",
+    "filterYoutube": "Filter YouTube streams...",
+    "searchYoutube": "Search YouTube for live news, music, radio streams...",
+    "searchBtn": "Search YouTube",
+    "pasteUrl": "Paste any YouTube Live Stream or Video URL (e.g., https://www.youtube.com/watch?v=...)",
+    "loadTranslate": "Load & Translate YouTube",
+    "uploadFile": "Upload audio/video file",
+    "captureCamera": "Capture from camera/mic",
+    "noMedia": "No media sources yet",
+    "noMediaDesc": "Upload an audio/video file or capture from your camera/microphone.",
+    "regional": "Regional Radio Streams ({{country}})",
+    "featured": "Featured Global Radio Broadcasts",
+    "youtubeSources": "Curated & Searched YouTube Live Sources",
+    "scanning": "Scanning Broadcast Frequencies...",
+    "noRadio": "No radio stations found",
+    "noRadioDesc": "Try clearing search filters or clicking another map region.",
+    "noYoutube": "No YouTube streams found",
+    "noYoutubeDesc": "Try searching for a different keyword or paste a YouTube URL above.",
+    "activeStations": "{{count}} active stations",
+    "youtubeCount": "{{count}} YouTube sources"
+  },
+  "player": {
+    "noStation": "Tuning Station empty...",
+    "noStationDesc": "Select any target location above",
+    "volume": "Volume: {{pct}}%",
+    "speed": "Speed:"
+  },
+  "settings": {
+    "title": "AI provider settings",
+    "desc": "Configure language models and audio services.",
+    "provider": "Provider",
+    "gemini": "Google Gemini (server API key)",
+    "openai": "OpenAI-compatible endpoints",
+    "backendUrl": "Backend server URL (mobile/remote)",
+    "backendHint": "Used by the Android app to reach the API. Empty = same origin (web).",
+    "cancel": "Cancel",
+    "save": "Save settings",
+    "llmTitle": "LLM — translation and radio profiles",
+    "llmDesc": "OpenAI Chat Completions-compatible endpoint.",
+    "sttTitle": "STT — speech recognition",
+    "sttDesc": "OpenAI audio transcriptions-compatible endpoint; accepts WAV audio.",
+    "ttsTitle": "TTS — translated speech",
+    "ttsDesc": "OpenAI audio speech-compatible endpoint; WAV output is requested.",
+    "endpoint": "Endpoint URL",
+    "modelsUrl": "Models list URL (optional)",
+    "modelsHint": "Leave blank to use the standard /models route",
+    "model": "Model",
+    "apiKey": "API key",
+    "apiKeyHint": "Optional for local endpoints",
+    "fetchModels": "Fetch model list",
+    "modelsFound": "{{count}} models found",
+    "voice": "Voice",
+    "voiceHint": "Voice ID (for example: alloy)",
+    "test": "Test",
+    "testEndpoint": "Test endpoint",
+    "testPrompt": "Test prompt",
+    "testText": "Text to synthesize",
+    "ok": "OK",
+    "audioPlayed": "(audio played)",
+    "selectFile": "Select an audio file first.",
+    "warning": "Keys are saved in this browser and sent to this app's server when used. Only configure endpoints and keys you trust.",
+    "language": "Language"
+  },
+  "map": {
+    "radius": "Radius"
+  }
+}
