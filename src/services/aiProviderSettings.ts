@@ -65,6 +65,8 @@ export function loadAIProviderSettings(): AIProviderSettings {
       llm: service(settings.llm, DEFAULT_AI_PROVIDER_SETTINGS.llm),
       stt: service(settings.stt, DEFAULT_AI_PROVIDER_SETTINGS.stt),
       tts: service(settings.tts, DEFAULT_AI_PROVIDER_SETTINGS.tts),
+      ...(typeof settings.ttsDucking === "number" ? { ttsDucking: settings.ttsDucking } : {}),
+      ...(typeof settings.ttsSpeed === "number" ? { ttsSpeed: settings.ttsSpeed } : {}),
     };
   } catch (error) {
     console.error("Could not load AI provider settings:", error);

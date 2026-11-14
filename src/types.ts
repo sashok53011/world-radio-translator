@@ -58,4 +58,6 @@ export interface AIProviderSettings {
   llm: AIServiceSettings;
   stt: AIServiceSettings;
   tts: AIServiceSettings;
+  ttsDucking?: number;
+  ttsSpeed?: number;
 }

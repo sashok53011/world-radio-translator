@@ -253,6 +253,7 @@ export default function App() {
       liveClient.disconnect();
       setLiveState(liveClient.getLiveState());
     } else {
+      liveClient.setTtsOptions(aiProviderSettings.ttsDucking ?? 0.2, aiProviderSettings.ttsSpeed ?? 1);
       await liveClient.connect(liveTargetLang, (updatedState) => {
         setLiveState({ ...updatedState });
       }, activeStation?.language, voiceName, voiceTone, aiProviderSettings, activeStation?.mediaStream);
@@ -323,6 +324,7 @@ export default function App() {
     const currentStatus = liveClient.getLiveState().status;
     if (currentStatus === "connected" || currentStatus === "connecting") {
       liveClient.disconnect();
+      liveClient.setTtsOptions(settings.ttsDucking ?? 0.2, settings.ttsSpeed ?? 1);
       liveClient.connect(
         liveTargetLang,
         (updatedState) => setLiveState({ ...updatedState }),

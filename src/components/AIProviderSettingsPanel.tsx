@@ -337,6 +337,32 @@ export default function AIProviderSettingsPanel({
               {savedVoices.map((v) => <option key={v} value={v} />)}
             </datalist>
           </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block space-y-1">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">TTS ducking (0-1)</span>
+              <input
+                type="number"
+                min="0"
+                max="1"
+                step="0.05"
+                className={inputClassName}
+                value={draft.ttsDucking ?? 0.2}
+                onChange={(e) => setDraft({ ...draft, ttsDucking: parseFloat(e.target.value) || 0 })}
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">TTS speed (0.5-2x)</span>
+              <input
+                type="number"
+                min="0.5"
+                max="2"
+                step="0.1"
+                className={inputClassName}
+                value={draft.ttsSpeed ?? 1}
+                onChange={(e) => setDraft({ ...draft, ttsSpeed: parseFloat(e.target.value) || 1 })}
+              />
+            </label>
+          </div>
           {savedVoices.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {savedVoices.map((v) => (

@@ -171,6 +171,8 @@ export class LiveTranslateClient {
   private totalSampleCount: number = 0;
   private mediaStream: MediaStream | null = null;
   private isVideoSource: boolean = false;
+  private ttsDucking: number = 0.2;
+  private ttsSpeed: number = 1.0;
 
   // Recorded audio for WAV export
   private recordedOriginalPcm: Float32Array[] = [];
@@ -581,6 +583,7 @@ export class LiveTranslateClient {
       const scheduleAudio = (audioBuffer: AudioBuffer) => {
         const source = this.playbackContext!.createBufferSource();
         source.buffer = audioBuffer;
+        source.playbackRate.value = this.ttsSpeed;
         source.connect(this.playbackContext!.destination);
 
         const currentTime = this.playbackContext!.currentTime;
@@ -590,7 +593,7 @@ export class LiveTranslateClient {
         this.activeSources.push(source);
 
         if (!this.isVideoSource && this.radioGainNode && this.micContext) {
-          this.radioGainNode.gain.setTargetAtTime(0.2, this.micContext.currentTime, 0.1);
+          this.radioGainNode.gain.setTargetAtTime(this.ttsDucking, this.micContext.currentTime, 0.1);
         }
         source.onended = () => {
           this.activeSources = this.activeSources.filter((activeSource) => activeSource !== source);
@@ -835,6 +838,11 @@ export class LiveTranslateClient {
       modelTranscript: "",
       turns: []
     });
+  }
+
+  public setTtsOptions(ducking: number, speed: number): void {
+    this.ttsDucking = Math.max(0, Math.min(1, ducking));
+    this.ttsSpeed = Math.max(0.5, Math.min(2, speed));
   }
 
   public getAnalyser(): AnalyserNode | null {
