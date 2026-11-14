@@ -338,7 +338,7 @@ export default function AIProviderSettingsPanel({
     }}>
       <form
         onSubmit={handleSubmit}
-        className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+        className="flex max-h-[100vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:max-h-[90vh]"
       >
         <header className="flex items-start justify-between border-b border-slate-200 p-5 dark:border-slate-700">
           <div>

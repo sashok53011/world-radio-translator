@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import type { AIProviderSettings, AIServiceSettings } from "./src/types";
@@ -37,6 +38,19 @@ app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
 
 const PORT = Number(process.env.PORT) || 3000;
+
+// Server-side settings storage
+const SETTINGS_DIR = path.join(process.cwd(), "data");
+const SETTINGS_FILE = path.join(SETTINGS_DIR, "settings.json");
+function loadSettingsStore(): Record<string, any> {
+  try { return JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf8")); } catch { return {}; }
+}
+function saveSettingsStore(store: Record<string, any>) {
+  try {
+    fs.mkdirSync(SETTINGS_DIR, { recursive: true });
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(store));
+  } catch (e) { console.warn("Failed to save settings:", e); }
+}
 
 // Helper to check if a string is a potentially valid Gemini API key format (accepts traditional 'AIzaSy' and new 'AQ' prefixes)
 function isValidGeminiApiKeyPrefix(key: string | undefined): boolean {
@@ -976,6 +990,23 @@ app.post("/api/ai/models", async (req, res) => {
   } catch (error: any) {
     return res.status(502).json({ error: error?.message || String(error) });
   }
+});
+
+// Server-side settings persistence
+app.get("/api/settings", (req, res) => {
+  const clientId = (req.query.clientId as string) || (req.headers["x-client-id"] as string);
+  if (!clientId) return res.status(400).json({ error: "clientId required" });
+  const store = loadSettingsStore();
+  return res.json({ settings: store[clientId] || null });
+});
+
+app.post("/api/settings", (req, res) => {
+  const { clientId, settings } = req.body || {};
+  if (!clientId) return res.status(400).json({ error: "clientId required" });
+  const store = loadSettingsStore();
+  store[clientId] = settings;
+  saveSettingsStore(store);
+  return res.json({ ok: true });
 });
 
 app.post("/api/geocode", async (req, res) => {

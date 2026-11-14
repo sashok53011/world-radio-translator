@@ -397,7 +397,15 @@ export default function StationList({
 
   const handleCameraCapture = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      // Combined camera+mic prompts are flaky on many phones (they can stall until the
+      // browser's permission timeout), so fall back to microphone-only before giving up.
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      } catch (combinedErr) {
+        console.warn("camera+mic capture failed, retrying with microphone only:", combinedErr);
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
       const station: RadioStation = {
         changeid: `cam-${Date.now()}`,
         stationuuid: `cam-${Math.random()}`,
@@ -422,7 +430,12 @@ export default function StationList({
       onSelectStation(station);
     } catch (err: any) {
       console.error("Camera capture failed:", err);
-      alert("Camera/microphone access denied or unavailable: " + (err?.message || String(err)));
+      const isBlocked = err?.name === "NotAllowedError" || err?.name === "SecurityError";
+      alert(
+        (isBlocked
+          ? "Доступ к камере/микрофону запрещён. Разрешите доступ в настройках сайта (значок 🔒 слева от адреса → Разрешения → Камера/Микрофон) и повторите.\n\n"
+          : "Камера/микрофон недоступны: ") + (err?.message || String(err))
+      );
     }
   };
 

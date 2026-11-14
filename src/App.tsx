@@ -9,7 +9,7 @@ import AudioPlayer from "./components/AudioPlayer";
 import AudioVisualizerD3 from "./components/AudioVisualizerD3";
 import { AIProviderSettings, RadioStation, LocationGeoProfile } from "./types";
 import { LiveTranslateClient, LiveTranslateState } from "./services/liveTranslateClient";
-import { loadAIProviderSettings, saveAIProviderSettings } from "./services/aiProviderSettings";
+import { loadAIProviderSettings, saveAIProviderSettings, loadAIProviderSettingsFromServer, saveAIProviderSettingsToServer } from "./services/aiProviderSettings";
 import { apiUrl } from "./apiBase";
 import AIProviderSettingsPanel from "./components/AIProviderSettingsPanel";
 
@@ -217,6 +217,15 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [profileLoading, setProfileLoading] = useState<boolean>(false);
   const [aiProviderSettings, setAIProviderSettings] = useState<AIProviderSettings>(loadAIProviderSettings);
+  // Sync settings from server on mount (server-side persistence)
+  useEffect(() => {
+    loadAIProviderSettingsFromServer().then((serverSettings) => {
+      if (serverSettings) {
+        saveAIProviderSettings(serverSettings);
+        setAIProviderSettings(serverSettings);
+      }
+    });
+  }, []);
   const [showAISettings, setShowAISettings] = useState(false);
 
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -309,6 +318,7 @@ export default function App() {
 
   const handleSaveAISettings = (settings: AIProviderSettings) => {
     saveAIProviderSettings(settings);
+    void saveAIProviderSettingsToServer(settings);
     setAIProviderSettings(settings);
     const currentStatus = liveClient.getLiveState().status;
     if (currentStatus === "connected" || currentStatus === "connecting") {
