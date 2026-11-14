@@ -220,7 +220,7 @@ export default function App() {
   // Sync settings from server on mount (server-side persistence)
   useEffect(() => {
     loadAIProviderSettingsFromServer().then((serverSettings) => {
-      if (serverSettings) {
+      if (serverSettings && serverSettings.provider === "openai-compatible") {
         saveAIProviderSettings(serverSettings);
         setAIProviderSettings(serverSettings);
       }
