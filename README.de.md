@@ -11,9 +11,99 @@ Live-Radiosender aus aller Welt streamen und in Echtzeit in die gewählte Sprach
 - Echtzeit-Sprachübersetzung: STT → LLM → TTS, mit Live-Transkript.
 - Transkript-Export (Kopieren / TXT) und Audio-Export (WAV: Original + Übersetzung).
 - KI-Anbieter: Gemini (Server-Key) oder OpenAI-kompatible Endpunkte (LLM/STT/TTS).
-- Modellsuche („Fetch model list“) für OpenAI-kompatible Dienste.
-- Dunkles/helles Theme, 60+ Sprachen.
+- Modellsuche und Verbindungstest für OpenAI-kompatible Dienste.
+- Serverseitige Speicherung der Einstellungen (pro Client-ID).
+- Dunkles/helles Theme, 3 UI-Sprachen (EN/RU/DE), 60+ Übersetzungssprachen.
 - Android-App (Capacitor) mit vollem Funktionsumfang.
+
+## Architektur
+
+### Übersicht
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Browser / Android WebView (React + Vite)                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │ WorldMap     │  │ StationList  │  │ AudioPlayer      │  │
+│  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘  │
+│         │                 │                    │            │
+│  ┌──────┴─────────────────┴────────────────────┴─────────┐  │
+│  │ App.tsx (State, Einstellungen, Live-Übersetzung)       │  │
+│  └──────┬─────────────────────────────────────────────────┘  │
+│         │                                                    │
+│  ┌──────┴──────────┐  ┌──────────────────────────────────┐  │
+│  │ liveTranslate   │  │ aiProviderSettings               │  │
+│  │ Client (WS)     │  │ (localStorage + Server-Sync)     │  │
+│  └──────┬──────────┘  └──────────────────────────────────┘  │
+└─────────┼────────────────────────────────────────────────────┘
+          │ WebSocket /api/live-stream  +  REST /api/*
+┌─────────┴────────────────────────────────────────────────────┐
+│  Express-Server (server.ts)                                   │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌──────────┐ │
+│  │ /api/geocode│ │/api/translate│ │/api/live- │ │/api/ai/* │ │
+│  │             │ │             │ │ transcribe│ │ models   │ │
+│  └──────┬─────┘ └──────┬─────┘ └─────┬─────┘ │ test     │ │
+│         │               │             │       │ settings │ │
+│  ┌──────┴───────────────┴─────────────┴───────┴──────────┐ │
+│  │ safeGenerateContent / openAIChatCompletion / etc.     │ │
+│  │ (Gemini oder OpenAI-kompatibel)                      │ │
+│  └──────┬───────────────────────────────────────────────┘ │
+│         │                                                  │
+│  ┌──────┴──────────┐  ┌──────────────┐  ┌──────────────┐ │
+│  │ Stream-Proxy    │  │ YouTube      │  │ Einstell.-   │ │
+│  │ /api/proxy-     │  │ Stream       │  │ speicher     │ │
+│  │ stream          │  │ /api/youtube │  │ (JSON)       │ │
+│  └─────────────────┘  └──────────────┘  └──────────────┘ │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Frontend (`src/`)
+
+- **`App.tsx`** — Hauptkomponente: State, Theme, Stationsauswahl, Live-Übersetzung, Transkript-UI.
+- **`components/`**
+  - `WorldMap.tsx` — Interaktive Karte (Klick zur Regionsauswahl).
+  - `StationList.tsx` — Liste von Radio/YouTube/lokalen Quellen mit Suche.
+  - `AudioPlayer.tsx` — HTML5 Audio/Video-Player mit HLS.
+  - `AudioVisualizerD3.tsx` — Echtzeit-Frequenzvisualisierer.
+  - `AIProviderSettingsPanel.tsx` — Anbieter-Einstellungen, Modellsuche, Tests.
+- **`services/`**
+  - `liveTranslateClient.ts` — Audio-Aufnahme aus DOM, WebSocket-Streaming, Wiedergabe, WAV-Aufnahme.
+  - `aiProviderSettings.ts` — Laden/Speichern (localStorage + Server-Sync).
+- **`apiBase.ts`** — Backend-Basis-URL-Auflösung.
+- **`i18n.ts` + `locales/`** — Lokalisierung (EN/RU/DE).
+- **`types.ts`** — TypeScript-Interfaces.
+
+### Backend (`server.ts`)
+
+- Express-Server mit Vite-Middleware (Dev) / Static (Prod).
+- WebSocket-Server auf `/api/live-stream` für Echtzeit-Übersetzung.
+- REST-Endpunkte:
+  - `POST /api/geocode` — Reverse-Geocoding + Kulturprofil.
+  - `POST /api/ai/models` — Modellsuche für OpenAI-kompatible Dienste.
+  - `POST /api/ai/test` — Test von LLM/STT/TTS-Endpunkten.
+  - `GET/POST /api/settings` — Serverseitige Speicherung der Einstellungen.
+  - `POST /api/translate` — Einmalige Textübersetzung.
+  - `POST /api/live-transcribe` — Schrittweise Audio-Transkription/Übersetzung.
+  - `POST /api/generate-feed` — Programmkarten-Generierung.
+  - `GET /api/proxy-stream` — Stream-Proxy für CORS/Mixed Content.
+  - `GET /api/youtube-stream` / `/api/youtube-search` — YouTube-Audio-Extraktion.
+- Gemini-Integration über `@google/genai` mit Retry/Fallback.
+- OpenAI-kompatible Integration: Chat Completions, Audio Transcriptions, Audio Speech.
+
+### Android (`android/`)
+
+Capacitor-basierter WebView-Wrapper. Berechtigungen: INTERNET, CAMERA, RECORD_AUDIO usw.
+
+### Datenfluss (Live-Übersetzung)
+
+1. Nutzer wählt einen Sender und klickt „Übersetzung starten“.
+2. `liveTranslateClient.connect()` öffnet WebSocket zu `/api/live-stream`.
+3. Server initialisiert KI-Anbieter (Gemini Live oder OpenAI-kompatible Pipeline).
+4. Client erfasst PCM-Audio aus dem `<audio>`/`<video>`-Element jede Sekunde.
+5. Audio-Chunks werden per WebSocket an den Server gesendet.
+6. Server verarbeitet: STT → LLM-Übersetzung → TTS.
+7. Übersetztes Audio + Transkript werden an den Client gesendet.
+8. Client spielt übersetztes Audio ab und zeigt Transkript.
 
 ## Lokal starten
 
@@ -37,18 +127,7 @@ npm run build
 NODE_ENV=production PORT=3000 npm run start
 ```
 
-## KI-Anbieter
-
-Einstellungen öffnen (Zahnrad-Symbol):
-
-- **Google Gemini** — nutzt serverseitigen `GEMINI_API_KEY`.
-- **OpenAI-kompatibel** — separate Endpunkte für LLM, STT, TTS. „Fetch model list“ sucht Modelle.
-
-Einstellungen und API-Schlüssel werden im Browser (localStorage) gespeichert.
-
-## Android
-
-Capacitor-Projekt in `android/`. Build:
+## Android-Build
 
 ```bash
 npm run build
@@ -58,17 +137,27 @@ cd android && ./gradlew assembleDebug
 
 APK: `android/app/build/outputs/apk/debug/app-debug.apk`
 
-## Struktur
+## TODO
 
-```
-server.ts          Backend (Express + WebSocket)
-src/
-  App.tsx          Haupt-UI
-  components/      WorldMap, StationList, AudioPlayer, ...
-  services/        liveTranslateClient, aiProviderSettings
-  locales/         en, ru, de
-android/           Capacitor-Android-Projekt
-```
+### Hohe Priorität
+- [ ] YouTube-Übersetzung zuverlässiger machen (ytdl-core-Ausfälle).
+- [ ] Offline-Caching für Senderlisten.
+- [ ] UI für kleine Bildschirme optimieren (6"-Telefone).
+- [ ] Fehlerbehandlung und Wiederholungen bei Stream-Ausfällen verbessern.
+
+### Mittlere Priorität
+- [ ] Weitere UI-Sprachen (Französisch, Spanisch usw.).
+- [ ] MP3-Export implementieren (aktuell nur WAV).
+- [ ] Playlisten/Favoriten für Sender.
+- [ ] Automatische Kalibrierung der Video-Verzögerung.
+- [ ] Push-Benachrichtigungen für neue Sendungen.
+
+### Niedrige Priorität
+- [ ] Unit-Tests für Services.
+- [ ] E2E-Tests für kritische Abläufe.
+- [ ] Barrierefreiheit verbessern (ARIA, Tastaturnavigation).
+- [ ] PWA-Unterstützung (Service Worker, Manifest).
+- [ ] Automatische Erkennung des System-Dark-Mode.
 
 ## Lizenz
 
