@@ -1116,7 +1116,7 @@ app.post("/api/translate", async (req, res) => {
     try {
       const translated = await openAIChatCompletion(
         aiSettings.llm,
-        `Translate the following text into natural, spoken ${targetLanguage}. Preserve its meaning and do not add commentary. Voice delivery style: ${voiceTone}.\n\n${text}`,
+        `Translate the following text into natural, spoken ${targetLanguage}. Preserve its meaning and emotional tone; you may include relevant emoji. Do not add commentary. Voice delivery style: ${voiceTone}.\n\n${text}`,
       );
       const audio = await openAISpeech(aiSettings.tts, translated, aiSettings.tts.voice || "alloy");
       return res.json({ translated, audio: audio.toString("base64"), audioMimeType: "audio/wav" });
@@ -1291,7 +1291,7 @@ app.post("/api/live-transcribe", async (req, res) => {
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           systemInstruction: {
-            parts: [{ text: `You are an expert live broadcast translator. Translate the spoken broadcast audio into standard spoken ${globalTargetLanguage}. Speak clearly, naturally, and with expressiveness. All translation output (including both intermediate and final translated texts, and spoken audio) MUST be strictly in ${globalTargetLanguage}. If the source language is already in ${globalTargetLanguage}, you are strictly required to echo, repeat, and clearly restate what you hear in a warm, pleasant, and real-time refined ${globalTargetLanguage} voice.` }]
+            parts: [{ text: `You are an expert live broadcast translator. Translate the spoken broadcast audio into standard spoken ${globalTargetLanguage}. Speak clearly, naturally, and with expressiveness. You may include relevant emoji to convey emotion. All translation output (including both intermediate and final translated texts, and spoken audio) MUST be strictly in ${globalTargetLanguage}. If the source language is already in ${globalTargetLanguage}, you are strictly required to echo, repeat, and clearly restate what you hear in a warm, pleasant, and real-time refined ${globalTargetLanguage} voice.` }]
           }
         },
         callbacks: {
@@ -1652,7 +1652,7 @@ async function startServer() {
             areLanguagesSame(sourceLanguage, targetLanguage)
               ? `The source is already in ${targetLanguage}; restate it clearly and naturally in the same language.`
               : `The source language is ${sourceLanguage || "unknown"}. Use a ${voiceTone.toLowerCase()} delivery.`
-          } Do not add commentary.\n\n${cleanedOriginal}`,
+          } Preserve the emotional tone; you may include relevant emoji. Do not add commentary.\n\n${cleanedOriginal}`,
         )).trim();
         if (!translatedText) continue;
         let audioBase64 = "";
@@ -1693,8 +1693,8 @@ async function startServer() {
 
         const sameLanguage = areLanguagesSame(sourceLanguage, targetLanguage) || (!sourceLanguage && isEnglish(targetLanguage));
         const systemInstruction = sameLanguage
-          ? `You are an expert live interpreter. Restate spoken audio clearly in ${targetLanguage} with a ${voiceTone.toLowerCase()} delivery. Always generate transcribed text and spoken audio.`
-          : `You are an expert live broadcast translator. Translate spoken broadcast audio into ${targetLanguage}, with a ${voiceTone.toLowerCase()} delivery. Never translate into English unless English is the chosen target.`;
+          ? `You are an expert live interpreter. Restate spoken audio clearly in ${targetLanguage} with a ${voiceTone.toLowerCase()} delivery. You may include relevant emoji to convey emotion. Always generate transcribed text and spoken audio.`
+          : `You are an expert live broadcast translator. Translate spoken broadcast audio into ${targetLanguage}, with a ${voiceTone.toLowerCase()} delivery. You may include relevant emoji to convey emotion. Never translate into English unless English is the chosen target.`;
 
         liveSession = await connectToLiveResilient({
           model: "gemini-3.5-live-translate-preview",
