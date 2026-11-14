@@ -411,6 +411,8 @@ export default function AudioPlayer({ station, isPlaying, setIsPlaying }: AudioP
               }
             } else {
               // For YouTube, video iframe plays video visually; audio element serves live translation pipeline.
+              // If the stream fails (ytdl cannot extract audio), report an error and stop.
+              setErrorState();
             }
           }}
           onEnded={() => setIsPlaying(false)}

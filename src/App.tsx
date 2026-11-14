@@ -11,6 +11,7 @@ import { AIProviderSettings, RadioStation, LocationGeoProfile } from "./types";
 import { LiveTranslateClient, LiveTranslateState } from "./services/liveTranslateClient";
 import { loadAIProviderSettings, saveAIProviderSettings, loadAIProviderSettingsFromServer, saveAIProviderSettingsToServer } from "./services/aiProviderSettings";
 import { apiUrl } from "./apiBase";
+import { log, getLogs, subscribeLogs, clearLogs, LogEntry } from "./logger";
 import AIProviderSettingsPanel from "./components/AIProviderSettingsPanel";
 
 const SUPPORTED_LANGUAGES = [
@@ -227,6 +228,8 @@ export default function App() {
     });
   }, []);
   const [showAISettings, setShowAISettings] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
 
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [radiusKm, setRadiusKm] = useState<number>(500);
@@ -250,10 +253,13 @@ export default function App() {
   const toggleLiveTranslation = async () => {
     const currentStatus = liveClient.getLiveState().status;
     if (currentStatus === "connected" || currentStatus === "connecting") {
+      log("control", "Stop translation requested");
       liveClient.disconnect();
       setLiveState(liveClient.getLiveState());
     } else {
+      log("control", `Start translation requested (target=${liveTargetLang})`);
       liveClient.setTtsOptions(aiProviderSettings.ttsDucking ?? 0.2, aiProviderSettings.ttsSpeed ?? 1);
+      liveClient.setSourceDelay(aiProviderSettings.sourceDelay ?? 0);
       await liveClient.connect(liveTargetLang, (updatedState) => {
         setLiveState({ ...updatedState });
       }, activeStation?.language, voiceName, voiceTone, aiProviderSettings, activeStation?.mediaStream);
@@ -325,6 +331,7 @@ export default function App() {
     if (currentStatus === "connected" || currentStatus === "connecting") {
       liveClient.disconnect();
       liveClient.setTtsOptions(settings.ttsDucking ?? 0.2, settings.ttsSpeed ?? 1);
+      liveClient.setSourceDelay(settings.sourceDelay ?? 0);
       liveClient.connect(
         liveTargetLang,
         (updatedState) => setLiveState({ ...updatedState }),
@@ -336,6 +343,20 @@ export default function App() {
       );
     }
   };
+
+  const [avgLatency, setAvgLatency] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setAvgLatency(liveClient.getAverageLatency());
+    }, 1000);
+    return () => clearInterval(id);
+  }, [liveClient]);
+
+  // Log subscription
+  useEffect(() => {
+    setLogEntries(getLogs());
+    return subscribeLogs(setLogEntries);
+  }, []);
 
   // Auto-scroll transcript container internally (NOT the window!)
   useEffect(() => {
@@ -466,6 +487,7 @@ export default function App() {
 
     setActiveStation(station);
     setIsPlaying(true);
+    log("station", `Selected station: ${station.name}`);
 
     if (wasTranslating) {
       // Cleanly restart the translation stream for the new selected station
@@ -497,6 +519,52 @@ export default function App() {
         <option value="ru">RU</option>
         <option value="de">DE</option>
       </select>
+
+      {/* Log toggle button */}
+      <button
+        onClick={() => setShowLogs((v) => !v)}
+        className="fixed bottom-24 left-32 z-50 px-2.5 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 text-slate-600 dark:text-slate-300 text-xs font-semibold shadow-md cursor-pointer"
+        title="Toggle log"
+        aria-label="Toggle log"
+      >
+        Log
+      </button>
+
+      {/* Log panel */}
+      {showLogs && (
+        <div className="fixed bottom-40 left-4 z-50 w-[90vw] max-w-md max-h-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-slate-200/60 dark:border-slate-800/60 rounded-xl shadow-2xl flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200/60 dark:border-slate-800/60">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Event Log</span>
+            <div className="flex gap-1.5">
+              <button
+                onClick={clearLogs}
+                className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => setShowLogs(false)}
+                className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 font-mono text-[10px]">
+            {logEntries.length === 0 ? (
+              <div className="text-slate-400 py-4 text-center">No events yet</div>
+            ) : (
+              logEntries.map((e, i) => (
+                <div key={i} className="flex gap-2">
+                  <span className="text-slate-400 shrink-0">{new Date(e.time).toLocaleTimeString()}</span>
+                  <span className="text-slate-500 dark:text-slate-400 shrink-0 w-16">{e.category}</span>
+                  <span className="text-slate-700 dark:text-slate-300 break-all">{e.message}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Absolute Unobtrusive Floating Dark Mode Toggle */}
       <button
@@ -661,6 +729,12 @@ export default function App() {
                   <option value="Deep & Cinematic">Deep & Cinematic</option>
                 </select>
               </div>
+              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-xs">
+                <span className="text-slate-400 font-mono text-[11px]">Latency:</span>
+                <span className="font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+                  {avgLatency > 0 ? `${avgLatency.toFixed(1)}s` : "—"}
+                </span>
+              </div>
             </div>
 
             {/* Connection Status Notice / Error message */}
@@ -773,6 +847,24 @@ export default function App() {
                     >
                       <Download className="w-3 h-3" />
                       <span>Trans WAV</span>
+                    </button>
+                    <button
+                      onClick={() => liveClient.exportMixedWav()}
+                      disabled={!liveClient.hasRecordedOriginal() && !liveClient.hasRecordedTranslated()}
+                      title="Export TTS mixed onto source as WAV"
+                      className="p-1 px-2.5 rounded-lg text-[11px] font-medium bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-850 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex items-center gap-1 cursor-pointer shadow-2sm disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span>Mix WAV</span>
+                    </button>
+                    <button
+                      onClick={() => liveClient.exportSrt()}
+                      disabled={liveState.turns.length === 0}
+                      title="Export subtitles (SRT, original + translation)"
+                      className="p-1 px-2.5 rounded-lg text-[11px] font-medium bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-850 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex items-center gap-1 cursor-pointer shadow-2sm disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span>SRT</span>
                     </button>
                   </div>
                 </div>

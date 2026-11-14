@@ -363,6 +363,19 @@ export default function AIProviderSettingsPanel({
               />
             </label>
           </div>
+          <label className="block space-y-1">
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Source delay buffer (0-10s)</span>
+            <input
+              type="number"
+              min="0"
+              max="10"
+              step="0.5"
+              className={inputClassName}
+              value={draft.sourceDelay ?? 0}
+              onChange={(e) => setDraft({ ...draft, sourceDelay: parseFloat(e.target.value) || 0 })}
+            />
+            <span className="text-[10px] text-slate-400">Delays source playback to align with lagging TTS (use measured latency).</span>
+          </label>
           {savedVoices.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {savedVoices.map((v) => (

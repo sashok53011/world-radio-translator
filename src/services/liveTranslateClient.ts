@@ -1,5 +1,6 @@
 import { AIProviderSettings } from "../types";
 import { wsUrl } from "../apiBase";
+import { log } from "../logger";
 
 export interface LiveTranslateTurn {
   originalText: string;
@@ -173,6 +174,10 @@ export class LiveTranslateClient {
   private isVideoSource: boolean = false;
   private ttsDucking: number = 0.2;
   private ttsSpeed: number = 1.0;
+  private sourceDelaySec: number = 0;
+  private sourceDelayNode: DelayNode | null = null;
+  private chunkSendTimes: number[] = [];
+  private latencies: number[] = [];
 
   // Recorded audio for WAV export
   private recordedOriginalPcm: Float32Array[] = [];
@@ -247,6 +252,7 @@ export class LiveTranslateClient {
       userTranscript: "",
       modelTranscript: "",
     });
+    log("connect", `Connecting: target=${targetLanguage}, voice=${voiceName || "default"}, video=${this.isVideoSource}`);
 
     try {
       let socketUrl = wsUrl(`/api/live-stream?targetLanguage=${encodeURIComponent(targetLanguage)}`);
@@ -290,6 +296,7 @@ export class LiveTranslateClient {
                 this.totalSampleCount = 0;
                 await this.startDOMAudioCapture();
                 this.updateState({ status: "connected" });
+                log("connect", "Connected; audio capture started");
                 this.accumulatedSamples = [];
                 this.totalSampleCount = 0;
                 this.intervalId = setInterval(() => this.sendAccumulatedAudioStream(), 1000);
@@ -387,6 +394,7 @@ export class LiveTranslateClient {
 
       this.ws.onerror = (err) => {
         console.error("[Live Translate Client] WebSocket error:", err);
+        log("error", "WebSocket error");
         this.updateState({
           status: "error",
           error: "WebSocket streaming error. Please check server connection."
@@ -486,9 +494,14 @@ export class LiveTranslateClient {
         this.sourceNode = this.micContext.createMediaElementSource(mediaElement);
         this.radioGainNode = this.micContext.createGain();
         this.radioGainNode.gain.value = this.isVideoSource ? 0 : 1.0;
-        
+
+        // Delay node for source playback (buffer to align with lagging TTS)
+        this.sourceDelayNode = this.micContext.createDelay(10);
+        this.sourceDelayNode.delayTime.value = this.sourceDelaySec;
+
         this.sourceNode.connect(this.radioGainNode);
-        this.radioGainNode.connect(this.micContext.destination);
+        this.radioGainNode.connect(this.sourceDelayNode);
+        this.sourceDelayNode.connect(this.micContext.destination);
 
         this.analyserNode = this.micContext.createAnalyser();
         this.analyserNode.fftSize = 64;
@@ -566,10 +579,22 @@ export class LiveTranslateClient {
     const base64Wav = arrayBufferToBase64(wavBuffer);
 
     this.ws.send(JSON.stringify({ audio: base64Wav }));
+    this.chunkSendTimes.push(performance.now());
+    log("audio", `Sent chunk: ${resampled.length} samples (${(resampled.length / 16000).toFixed(2)}s)`);
   }
 
   private playAudioChunk(base64Pcm: string, mimeType?: string) {
     try {
+      if (this.chunkSendTimes.length > 0) {
+        const sendTime = this.chunkSendTimes.shift()!;
+        const latencyMs = performance.now() - sendTime;
+        if (latencyMs > 0 && latencyMs < 30000) {
+          this.latencies.push(latencyMs);
+          if (this.latencies.length > 20) this.latencies = this.latencies.slice(-20);
+          log("buffer", `TTS latency: ${(latencyMs / 1000).toFixed(2)}s (avg: ${(this.getAverageLatency() / 1000).toFixed(2)}s)`);
+        }
+      }
+      log("tts", `Playing translated audio chunk (${mimeType ? "wav" : "pcm"})`);
       if (!this.playbackContext) {
         this.playbackContext = new (window.AudioContext || (window as any).webkitAudioContext)({
           sampleRate: 24000
@@ -637,6 +662,7 @@ export class LiveTranslateClient {
   }
 
   public disconnect(keepError = false) {
+    log("connect", "Disconnecting");
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
@@ -712,6 +738,11 @@ export class LiveTranslateClient {
     this.recordedTranslatedPcm = [];
     this.recordedTranslatedCount = 0;
     this.isVideoSource = false;
+    this.chunkSendTimes = [];
+    if (this.sourceDelayNode) {
+      try { this.sourceDelayNode.disconnect(); } catch (e) {}
+      this.sourceDelayNode = null;
+    }
 
     this.updateState({ 
       status: keepError ? "error" : "idle",
@@ -790,6 +821,85 @@ export class LiveTranslateClient {
     return new Blob([buffer], { type: "audio/wav" });
   }
 
+  public exportMixedWav(): void {
+    if (this.recordedOriginalCount === 0 && this.recordedTranslatedCount === 0) return;
+    const sampleRate = 16000;
+    // Resample translated (24k) to 16k
+    const translated16k = this.resampleChunks(this.recordedTranslatedPcm, 24000, sampleRate);
+    const original = this.flattenChunks(this.recordedOriginalPcm);
+    const translated = translated16k;
+    const len = Math.max(original.length, translated.length);
+    const mixed = new Float32Array(len);
+    for (let i = 0; i < original.length; i++) mixed[i] += original[i];
+    for (let i = 0; i < translated.length; i++) mixed[i] += translated[i];
+    // Normalize to prevent clipping
+    let peak = 0;
+    for (let i = 0; i < len; i++) peak = Math.max(peak, Math.abs(mixed[i]));
+    if (peak > 1) { for (let i = 0; i < len; i++) mixed[i] /= peak; }
+    const blob = this.buildWav([mixed], sampleRate);
+    this.downloadBlob(blob, `world_radio_mixed_${Date.now()}.wav`);
+  }
+
+  public exportSrt(): void {
+    const turns = this.state.turns;
+    if (turns.length === 0) return;
+    let srt = "";
+    turns.forEach((turn, idx) => {
+      const start = new Date(turn.timestamp).getTime() - 5000; // approximate turn start
+      const end = new Date(turn.timestamp).getTime();
+      srt += `${idx + 1}\n`;
+      srt += `${this.formatSrtTime(start)} --> ${this.formatSrtTime(Math.max(end, start + 1000))}\n`;
+      srt += `${turn.originalText}\n${turn.translatedText}\n\n`;
+    });
+    const blob = new Blob([srt], { type: "text/plain;charset=utf-8" });
+    this.downloadBlob(blob, `world_radio_subtitles_${Date.now()}.srt`);
+  }
+
+  private flattenChunks(chunks: Float32Array[]): Float32Array {
+    let total = 0;
+    for (const c of chunks) total += c.length;
+    const out = new Float32Array(total);
+    let off = 0;
+    for (const c of chunks) { out.set(c, off); off += c.length; }
+    return out;
+  }
+
+  private resampleChunks(chunks: Float32Array[], fromRate: number, toRate: number): Float32Array {
+    if (fromRate === toRate) return this.flattenChunks(chunks);
+    const flat = this.flattenChunks(chunks);
+    const ratio = fromRate / toRate;
+    const newLen = Math.round(flat.length / ratio);
+    const result = new Float32Array(newLen);
+    for (let i = 0; i < newLen; i++) {
+      const src = i * ratio;
+      const idx = Math.floor(src);
+      const w = src - idx;
+      const next = idx + 1 < flat.length ? idx + 1 : idx;
+      result[i] = flat[idx] * (1 - w) + flat[next] * w;
+    }
+    return result;
+  }
+
+  private formatSrtTime(ms: number): string {
+    if (ms < 0) ms = 0;
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    const msPart = ms % 1000;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")},${String(msPart).padStart(3, "0")}`;
+  }
+
+  private downloadBlob(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   public hasRecordedOriginal(): boolean {
     return this.recordedOriginalCount > 0;
   }
@@ -800,28 +910,12 @@ export class LiveTranslateClient {
 
   public exportOriginalWav(): void {
     if (this.recordedOriginalCount === 0) return;
-    const blob = this.buildWav(this.recordedOriginalPcm, 16000);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `world_radio_original_${Date.now()}.wav`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    this.downloadBlob(this.buildWav(this.recordedOriginalPcm, 16000), `world_radio_original_${Date.now()}.wav`);
   }
 
   public exportTranslatedWav(): void {
     if (this.recordedTranslatedCount === 0) return;
-    const blob = this.buildWav(this.recordedTranslatedPcm, 24000);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `world_radio_translated_${Date.now()}.wav`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    this.downloadBlob(this.buildWav(this.recordedTranslatedPcm, 24000), `world_radio_translated_${Date.now()}.wav`);
   }
 
   public getLiveState(): LiveTranslateState {
@@ -843,6 +937,23 @@ export class LiveTranslateClient {
   public setTtsOptions(ducking: number, speed: number): void {
     this.ttsDucking = Math.max(0, Math.min(1, ducking));
     this.ttsSpeed = Math.max(0.5, Math.min(2, speed));
+  }
+
+  public setSourceDelay(seconds: number): void {
+    this.sourceDelaySec = Math.max(0, Math.min(10, seconds));
+    if (this.sourceDelayNode && this.micContext) {
+      this.sourceDelayNode.delayTime.setTargetAtTime(this.sourceDelaySec, this.micContext.currentTime, 0.1);
+    }
+    log("buffer", `Source delay set to ${this.sourceDelaySec}s`);
+  }
+
+  public getAverageLatency(): number {
+    if (this.latencies.length === 0) return 0;
+    return this.latencies.reduce((a, b) => a + b, 0) / this.latencies.length;
+  }
+
+  public getSourceDelay(): number {
+    return this.sourceDelaySec;
   }
 
   public getAnalyser(): AnalyserNode | null {

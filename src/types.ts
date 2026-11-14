@@ -60,4 +60,5 @@ export interface AIProviderSettings {
   tts: AIServiceSettings;
   ttsDucking?: number;
   ttsSpeed?: number;
+  sourceDelay?: number;
 }

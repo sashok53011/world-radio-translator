@@ -153,6 +153,7 @@ function parseAIProviderSettings(value: unknown): AIProviderSettings {
     tts: readService(input.tts),
     ...(typeof input.ttsDucking === "number" ? { ttsDucking: input.ttsDucking } : {}),
     ...(typeof input.ttsSpeed === "number" ? { ttsSpeed: input.ttsSpeed } : {}),
+    ...(typeof input.sourceDelay === "number" ? { sourceDelay: input.sourceDelay } : {}),
   };
 }
 
