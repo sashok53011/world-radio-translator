@@ -141,6 +141,9 @@ function parseAIProviderSettings(value: unknown): AIProviderSettings {
       model: typeof config.model === "string" ? config.model.trim() : "",
       apiKey: typeof config.apiKey === "string" ? config.apiKey : "",
       ...(typeof config.voice === "string" ? { voice: config.voice } : {}),
+      ...(typeof config.systemPrompt === "string" ? { systemPrompt: config.systemPrompt } : {}),
+      ...(typeof config.userPrompt === "string" ? { userPrompt: config.userPrompt } : {}),
+      ...(typeof config.temperature === "number" ? { temperature: config.temperature } : {}),
     };
   };
   return {
@@ -191,6 +194,17 @@ async function openAIChatCompletion(
   jsonResponse = false,
 ): Promise<string> {
   const endpoint = validateAIService(settings, "LLM");
+  const temperature = typeof settings.temperature === "number" ? settings.temperature : 0;
+  const systemPrompt = settings.systemPrompt?.trim() || "";
+  const rawUserPrompt = settings.userPrompt?.trim();
+  const userPrompt = rawUserPrompt
+    ? (rawUserPrompt.includes("{{text}}") ? rawUserPrompt.replace(/\{\{text\}\}/g, prompt) : rawUserPrompt + "\n\n" + prompt)
+    : prompt;
+
+  const messages: Array<{ role: string; content: string }> = [];
+  if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+  messages.push({ role: "user", content: userPrompt });
+
   // Note: some OpenAI-compatible backends (e.g. the user's) reject
   // response_format.type="json_object" and only accept "json_schema" or "text".
   // We therefore omit response_format and rely on the prompt to request JSON,
@@ -200,7 +214,8 @@ async function openAIChatCompletion(
     headers: createAIHeaders(settings),
     body: JSON.stringify({
       model: settings.model,
-      messages: [{ role: "user", content: prompt }],
+      messages,
+      temperature,
     }),
   });
   if (!response.ok) {
@@ -1116,7 +1131,7 @@ app.post("/api/translate", async (req, res) => {
     try {
       const translated = await openAIChatCompletion(
         aiSettings.llm,
-        `Translate the following text into natural, spoken ${targetLanguage}. Preserve its meaning and emotional tone; you may include relevant emoji. Do not add commentary. Voice delivery style: ${voiceTone}.\n\n${text}`,
+        `Translate the following text into natural, spoken ${targetLanguage}. Preserve its meaning and emotional tone; you may include relevant emoji. Do NOT repeat the same word or phrase consecutively; use a synonym or rhyming word instead if needed. Do NOT output filler like "thank you" or meta-commentary. Do not add commentary. Voice delivery style: ${voiceTone}.\n\n${text}`,
       );
       const audio = await openAISpeech(aiSettings.tts, translated, aiSettings.tts.voice || "alloy");
       return res.json({ translated, audio: audio.toString("base64"), audioMimeType: "audio/wav" });
@@ -1291,7 +1306,7 @@ app.post("/api/live-transcribe", async (req, res) => {
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           systemInstruction: {
-            parts: [{ text: `You are an expert live broadcast translator. Translate the spoken broadcast audio into standard spoken ${globalTargetLanguage}. Speak clearly, naturally, and with expressiveness. You may include relevant emoji to convey emotion. All translation output (including both intermediate and final translated texts, and spoken audio) MUST be strictly in ${globalTargetLanguage}. If the source language is already in ${globalTargetLanguage}, you are strictly required to echo, repeat, and clearly restate what you hear in a warm, pleasant, and real-time refined ${globalTargetLanguage} voice.` }]
+            parts: [{ text: `You are an expert live broadcast translator. Translate the spoken broadcast audio into standard spoken ${globalTargetLanguage}. Speak clearly, naturally, and with expressiveness. You may include relevant emoji to convey emotion. Do NOT repeat the same word or phrase consecutively; use a synonym or rhyming word instead. Do NOT output filler like "thank you" or meta-commentary. All translation output (including both intermediate and final translated texts, and spoken audio) MUST be strictly in ${globalTargetLanguage}. If the source language is already in ${globalTargetLanguage}, you are strictly required to echo, repeat, and clearly restate what you hear in a warm, pleasant, and real-time refined ${globalTargetLanguage} voice.` }]
           }
         },
         callbacks: {
@@ -1652,7 +1667,7 @@ async function startServer() {
             areLanguagesSame(sourceLanguage, targetLanguage)
               ? `The source is already in ${targetLanguage}; restate it clearly and naturally in the same language.`
               : `The source language is ${sourceLanguage || "unknown"}. Use a ${voiceTone.toLowerCase()} delivery.`
-          } Preserve the emotional tone; you may include relevant emoji. Do not add commentary.\n\n${cleanedOriginal}`,
+          } Preserve the emotional tone; you may include relevant emoji. Do NOT repeat the same word or phrase consecutively; if a repetition is unavoidable, use a synonym or a rhyming word instead. Do NOT output filler like "thank you", "thanks", "hello", or any meta-commentary. Translate only. Do not add commentary.\n\n${cleanedOriginal}`,
         )).trim();
         if (!translatedText) continue;
         let audioBase64 = "";
@@ -1693,8 +1708,8 @@ async function startServer() {
 
         const sameLanguage = areLanguagesSame(sourceLanguage, targetLanguage) || (!sourceLanguage && isEnglish(targetLanguage));
         const systemInstruction = sameLanguage
-          ? `You are an expert live interpreter. Restate spoken audio clearly in ${targetLanguage} with a ${voiceTone.toLowerCase()} delivery. You may include relevant emoji to convey emotion. Always generate transcribed text and spoken audio.`
-          : `You are an expert live broadcast translator. Translate spoken broadcast audio into ${targetLanguage}, with a ${voiceTone.toLowerCase()} delivery. You may include relevant emoji to convey emotion. Never translate into English unless English is the chosen target.`;
+          ? `You are an expert live interpreter. Restate spoken audio clearly in ${targetLanguage} with a ${voiceTone.toLowerCase()} delivery. You may include relevant emoji to convey emotion. Do NOT repeat the same word or phrase consecutively; use a synonym or rhyming word instead. Do NOT output filler like "thank you" or meta-commentary. Always generate transcribed text and spoken audio.`
+          : `You are an expert live broadcast translator. Translate spoken broadcast audio into ${targetLanguage}, with a ${voiceTone.toLowerCase()} delivery. You may include relevant emoji to convey emotion. Do NOT repeat the same word or phrase consecutively; use a synonym or rhyming word instead. Do NOT output filler like "thank you" or meta-commentary. Never translate into English unless English is the chosen target.`;
 
         liveSession = await connectToLiveResilient({
           model: "gemini-3.5-live-translate-preview",

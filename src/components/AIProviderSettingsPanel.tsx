@@ -278,6 +278,47 @@ export default function AIProviderSettingsPanel({
           </div>
         )}
       </div>
+      {serviceName === "llm" && (
+        <div className="space-y-2">
+          <label className="block space-y-1">
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">System prompt (optional)</span>
+            <textarea
+              className={inputClassName}
+              rows={3}
+              value={draft.llm.systemPrompt || ""}
+              onChange={(e) => updateService("llm", "systemPrompt", e.target.value)}
+              placeholder="You are a translator. Output only the translation."
+            />
+          </label>
+          <label className="block space-y-1">
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">User prompt template (optional)</span>
+            <textarea
+              className={inputClassName}
+              rows={3}
+              value={draft.llm.userPrompt || ""}
+              onChange={(e) => updateService("llm", "userPrompt", e.target.value)}
+              placeholder="Translate the following text: {{text}}"
+            />
+            <span className="text-[10px] text-slate-400">{"Use {{text}} as placeholder for the input text."}</span>
+          </label>
+          <label className="block space-y-1">
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Temperature</span>
+            <input
+              type="number"
+              min="0"
+              max="2"
+              step="0.1"
+              className={inputClassName}
+              value={draft.llm.temperature ?? 0}
+              onChange={(e) => setDraft({
+                ...draft,
+                llm: { ...draft.llm, temperature: parseFloat(e.target.value) || 0 },
+              })}
+            />
+          </label>
+        </div>
+      )}
+
       {serviceName === "tts" && (
         <div className="space-y-2">
           <label className="block space-y-1">

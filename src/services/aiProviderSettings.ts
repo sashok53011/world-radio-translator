@@ -54,6 +54,9 @@ export function loadAIProviderSettings(): AIProviderSettings {
         apiKey: typeof candidate.apiKey === "string" ? candidate.apiKey : "",
         model: typeof candidate.model === "string" ? candidate.model : fallback.model,
         ...(typeof candidate.voice === "string" ? { voice: candidate.voice } : {}),
+        ...(typeof candidate.systemPrompt === "string" ? { systemPrompt: candidate.systemPrompt } : {}),
+        ...(typeof candidate.userPrompt === "string" ? { userPrompt: candidate.userPrompt } : {}),
+        ...(typeof candidate.temperature === "number" ? { temperature: candidate.temperature } : {}),
       };
     };
 

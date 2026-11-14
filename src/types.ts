@@ -48,6 +48,9 @@ export interface AIServiceSettings {
   apiKey: string;
   model: string;
   voice?: string;
+  systemPrompt?: string;
+  userPrompt?: string;
+  temperature?: number;
 }
 
 export interface AIProviderSettings {
