@@ -24,7 +24,14 @@ const app = express();
 // CORS for mobile (Capacitor) and web clients
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const allowed = !origin || origin === "capacitor://localhost" || origin === "http://localhost" || origin === "https://localhost" || origin.startsWith("http://localhost:") || origin.startsWith("https://localhost:");
+  const allowed = !origin ||
+    origin === "capacitor://localhost" ||
+    origin === "http://localhost" ||
+    origin === "https://localhost" ||
+    origin.startsWith("http://localhost:") ||
+    origin.startsWith("https://localhost:") ||
+    origin === "https://world-radio-translator.devhorizon.online" ||
+    origin.endsWith(".devhorizon.online");
   if (allowed && origin) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");

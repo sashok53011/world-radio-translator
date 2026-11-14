@@ -8,6 +8,8 @@ function resolveBase(): string {
     if (stored && stored.trim()) raw = stored.trim();
   } catch {}
   if (!raw) raw = (import.meta.env.VITE_API_BASE_URL as string | undefined) || "";
+  // Default to the public Cloudflare tunnel when no explicit backend is configured
+  if (!raw) raw = "https://world-radio-translator.devhorizon.online";
   return raw.replace(/\/+$/, "");
 }
 
