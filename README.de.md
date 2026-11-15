@@ -9,10 +9,15 @@ Live-Radiosender aus aller Welt streamen und in Echtzeit in die gewählte Sprach
 - YouTube-Live-Streams (Audio-Extraktion).
 - Lokale Dateien hochladen, Kamera/Mikrofon als Quelle.
 - Echtzeit-Sprachübersetzung: STT → LLM → TTS, mit Live-Transkript.
-- Transkript-Export (Kopieren / TXT) und Audio-Export (WAV: Original + Übersetzung).
+- Anti-Wiederholung mit Reim, Temperatur 0, keine Filler.
+- Editierbare System-/User-Prompts und Temperatur für OpenAI LLM.
+- TTS-Ducking und TTS-Geschwindigkeit (0.5–2x).
+- Quell-Puffer (0–10s) mit automatischer Latenzmessung.
+- Export: Transkript (TXT), Audio (WAV: Original / Übersetzung / Mix) und SRT-Untertitel.
 - KI-Anbieter: Gemini (Server-Key) oder OpenAI-kompatible Endpunkte (LLM/STT/TTS).
 - Modellsuche und Verbindungstest für OpenAI-kompatible Dienste.
 - Serverseitige Speicherung der Einstellungen (pro Client-ID).
+- Ereignislog-Panel mit Zeitstempeln und Kategorien.
 - Dunkles/helles Theme, 3 UI-Sprachen (EN/RU/DE), 60+ Übersetzungssprachen.
 - Android-App (Capacitor) mit vollem Funktionsumfang.
 
@@ -140,16 +145,15 @@ APK: `android/app/build/outputs/apk/debug/app-debug.apk`
 ## TODO
 
 ### Hohe Priorität
-- [ ] YouTube-Übersetzung zuverlässiger machen (ytdl-core-Ausfälle).
+- [ ] YouTube-Live-Übersetzung zuverlässiger machen (ytdl-core-Ausfälle).
 - [ ] Offline-Caching für Senderlisten.
-- [ ] UI für kleine Bildschirme optimieren (6"-Telefone).
 - [ ] Fehlerbehandlung und Wiederholungen bei Stream-Ausfällen verbessern.
+- [ ] Quell-Verzögerung aus gemessener Latenz automatisch kalibrieren.
 
 ### Mittlere Priorität
 - [ ] Weitere UI-Sprachen (Französisch, Spanisch usw.).
 - [ ] MP3-Export implementieren (aktuell nur WAV).
 - [ ] Playlisten/Favoriten für Sender.
-- [ ] Automatische Kalibrierung der Video-Verzögerung.
 - [ ] Push-Benachrichtigungen für neue Sendungen.
 
 ### Niedrige Priorität
@@ -158,6 +162,7 @@ APK: `android/app/build/outputs/apk/debug/app-debug.apk`
 - [ ] Barrierefreiheit verbessern (ARIA, Tastaturnavigation).
 - [ ] PWA-Unterstützung (Service Worker, Manifest).
 - [ ] Automatische Erkennung des System-Dark-Mode.
+- [ ] SRT-Timing präzisieren (Turn-Start vs -Ende).
 
 ## Lizenz
 

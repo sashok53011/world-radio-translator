@@ -9,10 +9,15 @@ Stream live radio broadcasts from anywhere in the world and translate them into 
 - YouTube Live stream support (audio extraction).
 - Local file upload and camera/microphone capture as audio sources.
 - Real-time voice translation: STT → LLM → TTS, with live transcript.
-- Transcript export (copy / download TXT) and audio export (WAV: original + translated).
+- Anti-repetition + rhyme in LLM output, temperature 0, no filler.
+- Editable system/user prompts and temperature for OpenAI LLM.
+- TTS ducking level and TTS playback speed (0.5–2x).
+- Source delay buffer (0–10s) with automatic latency measurement.
+- Transcript export (TXT), audio export (WAV: original / translated / mixed) and SRT subtitles.
 - AI provider settings: Gemini (server key) or OpenAI-compatible endpoints (LLM/STT/TTS).
 - Model discovery ("Fetch model list") and connection test for OpenAI-compatible services.
 - Server-side settings persistence (per client ID).
+- Event log panel with timestamps and categories.
 - Dark/light theme, 3 UI languages (EN/RU/DE), 60+ translation languages.
 - Android app (Capacitor) with full functionality.
 
@@ -140,10 +145,10 @@ APK: `android/app/build/outputs/apk/debug/app-debug.apk`
 ## TODO
 
 ### High Priority
-- [ ] Improve YouTube translation reliability (ytdl-core breakage).
+- [ ] Improve YouTube live-stream translation reliability (ytdl-core breakage on some streams).
 - [ ] Add offline caching for radio station lists.
-- [ ] Optimize mobile UI for small screens (6" phones).
 - [ ] Add proper error handling and retry for stream failures.
+- [ ] Auto-calibrate source delay from measured latency.
 
 ### Medium Priority
 - [ ] Add more UI languages (French, Spanish, etc.).
